@@ -12,5 +12,6 @@ CREATE TABLE IF NOT EXISTS `gantt_tasks` (
   `start_date` datetime NOT NULL,
   `duration` int(11) NOT NULL,
   `progress` float NOT NULL DEFAULT 0,
-  `parent` int(11) NOT NULL
+  `parent` int(11) NOT NULL,
+  `sortordet` float NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
