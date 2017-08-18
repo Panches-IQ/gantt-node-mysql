@@ -31,6 +31,9 @@ app.get("/data", function (req, res) {
 			}
 
 			res.send({ data: rows, collections: { links: links } });
+		})
+		.catch(function(error) {
+		    sendResponse(res, "error"); 
 		});
 });
 
@@ -47,6 +50,9 @@ app.post("/data/task", function (req, res) { // adds new task to database
 		})
 		.then (function (result) {
 			sendResponse(res, "inserted", result ? result.insertId : null);
+		})
+		.catch(function(error) {
+		    sendResponse(res, "error"); 
 		});
 });
 
@@ -76,6 +82,9 @@ app.put("/data/task/:id", function (req, res) {
 			})
 			.then (function(result) {
 					sendResponse(res, "updated", null);
+			})
+			.catch(function(error) {
+			    sendResponse(res, "error"); 
 			});
 
 	} else {		
@@ -83,6 +92,9 @@ app.put("/data/task/:id", function (req, res) {
 			[task.text, task.start_date, task.duration, task.progress, task.parent, sid])
 			.then (function(result) {
 				sendResponse(res, "updated", null);
+			})
+			.catch(function(error) {
+			    sendResponse(res, "error"); 
 			});	
 	}
 });
@@ -92,6 +104,9 @@ app.delete("/data/task/:id", function (req, res) {
 	db.query("DELETE FROM gantt_tasks WHERE id = ?", [sid])
 		.then (function (result) {
 			sendResponse(res, "deleted", null);
+		})
+		.catch(function(error) {
+		    sendResponse(res, "error"); 
 		});
 });
 
@@ -101,6 +116,9 @@ app.post("/data/link", function (req, res) {
 	db.query("INSERT INTO gantt_links(source, target, type) VALUES (?,?,?)", [link.source, link.target, link.type])
 		.then (function (result) {
 			sendResponse(res, "inserted", result ? result.insertId : null);
+		})
+		.catch(function(error) {
+		    sendResponse(res, "error"); 
 		});
 });
 
@@ -111,6 +129,9 @@ app.put("/data/link/:id", function (req, res) {
 	db.query("UPDATE gantt_links SET source = ?, target = ?, type = ? WHERE id = ?", [link.source, link.target, link.type, sid])
 		.then (function (result) {
 			sendResponse(res, "updated", null);
+		})
+		.catch(function(error) {
+		    sendResponse(res, "error"); 
 		});
 });
 
@@ -119,7 +140,10 @@ app.delete("/data/link/:id", function (req, res) {
 	db.query("DELETE FROM gantt_links WHERE id = ?", [sid])
 		.then (function (result) {
 			sendResponse(res, "deleted", null);
-		});
+		})
+	.catch(function(error) {
+	    sendResponse(res, "error"); 
+	});
 });
 
 
@@ -142,6 +166,9 @@ function getLink(data) {
 }
 
 function sendResponse(res, action, tid) {
+
+	if (action == "error")
+		console.log(error);
 
 	var result = {
 		action: action
