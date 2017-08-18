@@ -60,7 +60,7 @@ app.put("/data/task/:id", function (req, res) {
 		target = req.body.target,
 		task = getTask(req.body);
 
-	if (target !== undefined) {
+	if (target) {
 		var nextTask = false;
 		if(target.startsWith("next:")) {
 			target = target.substr(5);
