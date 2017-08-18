@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/data", function (req, res) {
 	var rows;
-	db.query("SELECT * FROM gantt_tasks")
+	db.query("SELECT * FROM gantt_tasks ORDER BY sortorder ASC")
 		.then (function (result) {
 			rows = result;
 			return db.query("SELECT * FROM gantt_links");
@@ -29,10 +29,6 @@ app.get("/data", function (req, res) {
 				rows[i].start_date = rows[i].start_date.format("YYYY-MM-DD");
 				rows[i].open = true;
 			}
-
-			rows.sort(function(a, b) {
-				return a.sortorder - b.sortorder;
-			});
 
 			res.send({ data: rows, collections: { links: links } });
 		});
