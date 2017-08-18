@@ -18,7 +18,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/data", function (req, res) {
 	db.query("SELECT * FROM gantt_tasks", function (err, rows) {
-		if (err) console.log(err);
+		if (err) 
+			console.log(err);
 		db.query("SELECT * FROM gantt_links", function (err, links) {
 			if (err) console.log(err);
 
@@ -26,8 +27,6 @@ app.get("/data", function (req, res) {
 				rows[i].start_date = rows[i].start_date.format("YYYY-MM-DD");
 				rows[i].open = true;
 			}
-
-			// sort 'rows' by 'sortorder' field
 
 			rows.sort(function(a, b) {
 				return a.sortorder - b.sortorder;
@@ -41,12 +40,12 @@ app.get("/data", function (req, res) {
 app.post("/data/task", function (req, res) { // adds new task to database
 	var task = getTask(req.body);	
 
-	db.query("SELECT MAX(sortorder) AS sortorder FROM gantt_tasks", function(err, result) {
-		var orderIndex = 1;
+	db.query("SELECT MAX(sortorder) AS maxOrder FROM gantt_tasks", function(err, result) {		
 		if(err) 
 			console.log(err);
-		if(result[0].sortorder !== null)
-			orderIndex = result[0].sortorder + 1; // new task has a last order number or 0 if no tasks exist
+		var orderIndex = 0;
+		if(result[0].maxOrder !== null)
+			orderIndex = result[0].maxOrder + 1; // new task has a last order number or 0 if no tasks exist
 		db.query("INSERT INTO gantt_tasks(text, start_date, duration, progress, parent, sortorder) VALUES (?,?,?,?,?,?)",
 		[task.text, task.start_date, task.duration, task.progress, task.parent, orderIndex],
 		function (err, result) {
@@ -56,85 +55,43 @@ app.post("/data/task", function (req, res) { // adds new task to database
 
 });
 
-app.put("/data/task/:id", function (req, res) { // updates task in database, recieving target when mooving
+app.put("/data/task/:id", function (req, res) {
 	var sid = req.params.id,
 		target = req.body.target,
-		currIndexOrder,
 		task = getTask(req.body);
-	
-	if(target !== undefined) {
-		var isNext = false;
-		if(target.startsWith('next:')) {
+
+	if (target !== undefined) {
+		var nextTask = false;
+		if(target.startsWith("next:")) {
 			target = target.substr(5);
-			isNext = true;
+			nextTask = true;
 		}
-		db.query('SELECT * FROM gantt_tasks WHERE id='+target, function(err, result) {
-			//console.log(result, target)
-			if(err) 
+
+		db.query("SELECT * FROM gantt_tasks WHERE id = ?", [target], function(err, result) { // select the base task
+			if (err)
 				console.log(err);
-			currIndexOrder = result[0].sortorder;
-
-			db.query('SELECT * FROM gantt_tasks', function(err, rows) {
-				var min = rows[0].sortorder,
-					max = rows[0].sortorder;
-
-
-				rows.forEach(function(x) {
-					console.log(x)
-					if (min > x.sortorder)
-						min = x.sortorder;
-					if (max < x.sortorder)
-						max = x.sortorder;
-				}); // min & max among sortorder values
-				//console.log(min, max)
-				var minNearest = min,
-					maxNearest = max,
-					maxDelta = max - currIndexOrder,
-					minDelta = currIndexOrder - min;
-
-				rows.forEach(function(x) {
-					var temp = x.sortorder;
-					if (currIndexOrder > temp && currIndexOrder-temp < minDelta) {
-						minNearest = temp;
-						minDelta = currIndexOrder - temp;
-					}
-
-					if (currIndexOrder < temp && temp-currIndexOrder < maxDelta) {
-						maxNearest = temp;
-						maxDelta = temp - currIndexOrder;
-					}
-
-				});
-
-				if (isNext) {
-					if (currIndexOrder == max)
-						currIndexOrder++;
-					else 
-						currIndexOrder = (currIndexOrder + maxNearest)*0.5;
-				} else {
-					if (currIndexOrder == min)
-						currIndexOrder = currIndexOrder*0.5;
-					else 
-						currIndexOrder = (currIndexOrder + minNearest)*0.5;
-				}
-			})
-		})
-
-		db.query("UPDATE gantt_tasks SET text = ?, start_date = ?, duration = ?, progress = ?, parent = ?, sortorder = ? WHERE id = ?",
-			[task.text, task.start_date, task.duration, task.progress, task.parent, currIndexOrder, sid],
-			function (err, result) {
-				sendResponse(res, "updated", null, err);
+			var targetOrder = result[0].sortorder;
+			if(nextTask)
+				targetOrder++;
+			db.query("UPDATE gantt_tasks SET sortorder = sortorder + 1 WHERE sortorder >= ?", [targetOrder], function(err, result) {
+				if (err)
+					console.log(err);
+				db.query("UPDATE gantt_tasks SET text = ?, start_date = ?, duration = ?, progress = ?, parent = ?, sortorder = ? WHERE id = ?",
+					[task.text, task.start_date, task.duration, task.progress, task.parent, targetOrder, sid],
+					function(err, result) {
+						sendResponse(res, "updated", null, err);
+					});
 			});
+		});
 
 	} else {
-
+		
 		db.query("UPDATE gantt_tasks SET text = ?, start_date = ?, duration = ?, progress = ?, parent = ? WHERE id = ?",
 			[task.text, task.start_date, task.duration, task.progress, task.parent, sid],
-			function (err, result) {
+			function(err, result) {
 				sendResponse(res, "updated", null, err);
-			});
+			});	
 	}
-	
 });
 
 app.delete("/data/task/:id", function (req, res) {
