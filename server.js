@@ -33,7 +33,7 @@ app.get("/data", function (req, res) {
 			res.send({ data: rows, collections: { links: links } });
 		})
 		.catch(function(error) {
-		    sendResponse(res, "error"); 
+		    sendResponse(res, "error", null, error); 
 		});
 });
 
@@ -49,10 +49,10 @@ app.post("/data/task", function (req, res) { // adds new task to database
 				[task.text, task.start_date, task.duration, task.progress, task.parent, orderIndex]);
 		})
 		.then (function (result) {
-			sendResponse(res, "inserted", result ? result.insertId : null);
+			sendResponse(res, "inserted", result.insertId);
 		})
 		.catch(function(error) {
-		    sendResponse(res, "error"); 
+		    sendResponse(res, "error", null, error); 
 		});
 });
 
@@ -84,7 +84,7 @@ app.put("/data/task/:id", function (req, res) {
 					sendResponse(res, "updated", null);
 			})
 			.catch(function(error) {
-			    sendResponse(res, "error"); 
+			    sendResponse(res, "error", null, error); 
 			});
 
 	} else {		
@@ -94,7 +94,7 @@ app.put("/data/task/:id", function (req, res) {
 				sendResponse(res, "updated", null);
 			})
 			.catch(function(error) {
-			    sendResponse(res, "error"); 
+			    sendResponse(res, "error", null, error); 
 			});	
 	}
 });
@@ -106,7 +106,7 @@ app.delete("/data/task/:id", function (req, res) {
 			sendResponse(res, "deleted", null);
 		})
 		.catch(function(error) {
-		    sendResponse(res, "error"); 
+		    sendResponse(res, "error", null, error); 
 		});
 });
 
@@ -115,10 +115,10 @@ app.post("/data/link", function (req, res) {
 
 	db.query("INSERT INTO gantt_links(source, target, type) VALUES (?,?,?)", [link.source, link.target, link.type])
 		.then (function (result) {
-			sendResponse(res, "inserted", result ? result.insertId : null);
+			sendResponse(res, "inserted", result.insertId);
 		})
 		.catch(function(error) {
-		    sendResponse(res, "error"); 
+		    sendResponse(res, "error", null, error); 
 		});
 });
 
@@ -131,7 +131,7 @@ app.put("/data/link/:id", function (req, res) {
 			sendResponse(res, "updated", null);
 		})
 		.catch(function(error) {
-		    sendResponse(res, "error"); 
+		    sendResponse(res, "error", null, error); 
 		});
 });
 
@@ -142,7 +142,7 @@ app.delete("/data/link/:id", function (req, res) {
 			sendResponse(res, "deleted", null);
 		})
 	.catch(function(error) {
-	    sendResponse(res, "error"); 
+	    sendResponse(res, "error", null, error); 
 	});
 });
 
@@ -165,7 +165,7 @@ function getLink(data) {
 	};
 }
 
-function sendResponse(res, action, tid) {
+function sendResponse(res, action, tid, error) {
 
 	if (action == "error")
 		console.log(error);
