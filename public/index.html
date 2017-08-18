@@ -15,14 +15,6 @@
         gantt.init("gantt_here");
         gantt.load("/data");
 
-        // gantt.attachEvent('onAfterTaskMove', function(id) {
-        //     var task = gantt.getTask(id);
-        //     delete task.target;
-        //     console.log(task.target)
-            
-        //     return true;
-        // })
-
 		var dp = new gantt.dataProcessor("/data");
         dp.init(gantt);
         dp.setTransactionMode("REST");
